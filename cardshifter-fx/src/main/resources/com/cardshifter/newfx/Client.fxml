@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.web.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label alignment="CENTER" contentDisplay="CENTER" layoutY="6.0" prefHeight="60.0" text="Cardshifter" textAlignment="CENTER" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <font>
+            <Font name="System Bold" size="40.0" />
+         </font>
+      </Label>
+      <AnchorPane layoutX="261.0" layoutY="568.0" prefHeight="25.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+         <children>
+            <Label fx:id="buildLabel" layoutX="4.0" layoutY="8.0" text="Build placeholder" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="4.0" />
+         </children>
+      </AnchorPane>
+      <Button layoutX="975.0" layoutY="14.0" mnemonicParsing="false" onAction="#handleExitButtonAction" text="Exit" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0" />
+      <BorderPane fx:id="contentPane" layoutX="276.0" layoutY="234.0" AnchorPane.bottomAnchor="25.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0" />
+   </children>
+</AnchorPane>

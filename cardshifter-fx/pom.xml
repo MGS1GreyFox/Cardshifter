@@ -31,7 +31,9 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.cardshifter.client.GameClient</mainClass>
+							<mainClass>com.cardshifter.newfx.Client</mainClass>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
 					</archive>
 				</configuration>

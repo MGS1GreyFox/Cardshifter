@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane id="AnchorPane" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
+   <children>
+      <GridPane alignment="CENTER" hgap="30.0" layoutX="57.0" layoutY="45.0" vgap="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="NEVER" />
+          <ColumnConstraints hgrow="NEVER" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints vgrow="NEVER" />
+          <RowConstraints vgrow="NEVER" />
+          <RowConstraints vgrow="NEVER" />
+            <RowConstraints vgrow="NEVER" />
+        </rowConstraints>
+         <children>
+            <Label text="IP address:" />
+            <Label text="Port:" GridPane.rowIndex="1" />
+            <Label text="Username:" GridPane.rowIndex="2" />
+            <TextField fx:id="ipAddressTextField" GridPane.columnIndex="1" />
+            <TextField fx:id="portTextField" layoutX="67.0" layoutY="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextField fx:id="usernameTextField" layoutX="10.0" layoutY="10.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <BorderPane GridPane.rowIndex="3">
+               <center>
+                  <Button alignment="CENTER" defaultButton="true" mnemonicParsing="false" onAction="#handleConnectButtonAction" text="Connect" BorderPane.alignment="CENTER" />
+               </center>
+            </BorderPane>
+            <BorderPane GridPane.columnIndex="1" GridPane.rowIndex="3">
+               <center>
+                  <Button alignment="CENTER" cancelButton="true" mnemonicParsing="false" onAction="#handleCancelButtonAction" text="Cancel" BorderPane.alignment="CENTER" />
+               </center>
+            </BorderPane>
+         </children>
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
+      </GridPane>
+   </children>
+</AnchorPane>
