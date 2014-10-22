@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 import net.zomis.cardshifter.ecs.usage.PhrancisGame;
-import net.zomis.cardshifter.ecs.usage.SimpleGame;
+import net.zomis.cardshifter.ecs.usage.PhrancisGameNewAttackSystem;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -20,9 +20,9 @@ import com.cardshifter.api.incoming.StartGameRequest;
 import com.cardshifter.modapi.ai.CardshifterAI;
 import com.cardshifter.server.commands.AICommand;
 import com.cardshifter.server.commands.AICommand.AICommandParameters;
-import com.cardshifter.server.commands.EntityCommand.EntityInspectParameters;
-import com.cardshifter.server.commands.EntityCommand;
 import com.cardshifter.server.commands.CommandContext;
+import com.cardshifter.server.commands.EntityCommand;
+import com.cardshifter.server.commands.EntityCommand.EntityInspectParameters;
 import com.cardshifter.server.commands.HelpCommand;
 import com.cardshifter.server.commands.HelpCommand.HelpParameters;
 import com.cardshifter.server.main.FakeAIClientTCG;
@@ -63,7 +63,8 @@ public class MainServer {
 			});
 			
 			server.addGameFactory(CardshifterConstants.VANILLA, (serv, id) -> new TCGGame(serv, id, new PhrancisGame()));
-			server.addGameFactory("SIMPLE", (serv, id) -> new TCGGame(serv, id, new SimpleGame()));
+			server.addGameFactory("New Attack Style", (serv, id) -> new TCGGame(serv, id, new PhrancisGameNewAttackSystem()));
+//			server.addGameFactory("SIMPLE", (serv, id) -> new TCGGame(serv, id, new SimpleGame()));
 			
 			logger.info("Started");
 		}

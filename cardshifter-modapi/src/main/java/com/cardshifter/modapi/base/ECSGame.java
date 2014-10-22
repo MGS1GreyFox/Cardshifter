@@ -52,6 +52,9 @@ public final class ECSGame {
 	public void addSystem(ECSSystem system) {
 		this.systems.add(system);
 		Retrievers.inject(system, this);
+		if (gameState != ECSGameState.NOT_STARTED) {
+			system.startGame(this);
+		}
 	}
 	
 	public void startGame() {
@@ -97,6 +100,15 @@ public final class ECSGame {
 	
 	public void setRandomSeed(long seed) {
 		random.setSeed(seed);
+	}
+
+	public List<ECSSystem> findSystemsOfClass(Class<? extends ECSSystem> clazz) {
+		return systems.stream().filter(sys -> clazz.isAssignableFrom(sys.getClass())).collect(Collectors.toList());
+	}
+
+	public boolean removeSystem(ECSSystem system) {
+		events.removeListenersWithIdentifier(system);
+		return systems.remove(system);
 	}
 	
 	// TODO: copy actions. Set<ActionOptions>. choose one, choose two
