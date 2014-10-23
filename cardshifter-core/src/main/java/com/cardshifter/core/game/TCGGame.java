@@ -1,10 +1,12 @@
-package com.cardshifter.server.model;
+package com.cardshifter.core.game;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import net.zomis.cardshifter.ecs.EntitySerialization;
@@ -14,6 +16,8 @@ import net.zomis.cardshifter.ecs.usage.DeckConfig;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import com.cardshifter.ai.FakeAIClientTCG;
+import com.cardshifter.api.ClientIO;
 import com.cardshifter.api.both.PlayerConfigMessage;
 import com.cardshifter.api.incoming.RequestTargetsMessage;
 import com.cardshifter.api.incoming.UseAbilityMessage;
@@ -36,6 +40,7 @@ import com.cardshifter.modapi.ai.AIComponent;
 import com.cardshifter.modapi.ai.AISystem;
 import com.cardshifter.modapi.base.ComponentRetriever;
 import com.cardshifter.modapi.base.ECSGame;
+import com.cardshifter.modapi.base.ECSGameState;
 import com.cardshifter.modapi.base.ECSMod;
 import com.cardshifter.modapi.base.Entity;
 import com.cardshifter.modapi.base.PlayerComponent;
@@ -46,25 +51,43 @@ import com.cardshifter.modapi.events.EntityRemoveEvent;
 import com.cardshifter.modapi.events.GameOverEvent;
 import com.cardshifter.modapi.resources.ResourceValueChange;
 import com.cardshifter.modapi.resources.Resources;
-import com.cardshifter.server.main.FakeAIClientTCG;
 
+/**
+ * Extends ServerGame which is primarily a state manager.
+ * This initializes the ECSGame and accepts the ECSMod.
+ * 
+ * @author Simon Forsberg
+ */
 public class TCGGame extends ServerGame {
 	
 	private static final Logger logger = LogManager.getLogger(TCGGame.class);
-	private final ECSGame game;
 	private final ComponentRetriever<CardComponent> card = ComponentRetriever.retreiverFor(CardComponent.class);
 	
 	private ComponentRetriever<PlayerComponent> playerData = ComponentRetriever.retreiverFor(PlayerComponent.class);
+	/**
+	 * Supplied as an argument to the initialization method
+	 */
 	private final ECSMod mod;
-	private final Server server;
+	private final Supplier<ScheduledExecutorService> aiExecutor;
 	
-	public TCGGame(Server server, int id, ECSMod mod) {
-		super(server, id);
-		this.server = server;
-		game = new ECSGame();
+	/**
+	 * 
+	 * @param aiExecutor AI action scheduler
+	 * @param id The game id
+	 * @param mod The mod that the game will run
+	 */
+	public TCGGame(Supplier<ScheduledExecutorService> aiExecutor, int id, ECSMod mod) {
+		super(id, new ECSGame());
+		this.aiExecutor = aiExecutor;
 		this.mod = mod;
 	}
-
+	
+	/**
+	 * Gets the card entity for the card, then sends a ZoneChangeMessage to all clients.
+	 * Checks if the player has knowledge of the zone, and sends the real card data if so
+	 * 
+	 * @param event The ZoneChangeEvent object
+	 */
 	private void zoneChange(ZoneChangeEvent event) {
 		Entity cardEntity = event.getCard();
 		for (ClientIO io : this.getPlayers()) {
@@ -76,16 +99,35 @@ public class TCGGame extends ServerGame {
 		}
 	}
 	
+	/**
+	 * Sends a CardInfoMessage to the targeted player.
+	 * This is sent in addition to zoneChange for zones the player has knowledge of
+	 * 
+	 * @param io Target client
+	 * @param zoneId Zone that the card is in
+	 * @param cardEntity The card Entity object
+	 */
 	private void sendRealCardData(ClientIO io, int zoneId, Entity cardEntity) {
 		io.sendToClient(new CardInfoMessage(zoneId, cardEntity.getId(), infoMap(cardEntity)));
 	}
 
+	/**
+	 * Sends an EntityRemoveMessage for the supplied event
+	 * 
+	 * @param event The EntityRemove event
+	 */
 	private void remove(EntityRemoveEvent event) {
 		this.send(new EntityRemoveMessage(event.getEntity().getId()));
 	}
 	
+	/**
+	 * If the event is a for a player, zone, or game, an UpdateMessage is sent to all players.
+	 * For cards it is only sent to players who have knowledge of the card zone
+	 * 
+	 * @param event The ResourceValueChange event
+	 */
 	private void broadcast(ResourceValueChange event) {
-		if (getState() == GameState.NOT_STARTED) {
+		if (game.getGameState() == ECSGameState.NOT_STARTED) {
 			// let the most information be sent when actually starting the game
 			return;
 		}
@@ -108,6 +150,12 @@ public class TCGGame extends ServerGame {
 		}
 	}
 	
+	/**
+	 * Sends a list of target entities based on the action supplied in the message
+	 * 
+	 * @param message The RequestTargetsMessage object
+	 * @param client The client requesting the targets
+	 */
 	public void informAboutTargets(RequestTargetsMessage message, ClientIO client) {
 		ECSAction action = findAction(message.getId(), message.getAction());
 		TargetSet targetAction = action.getTargetSets().get(0);
@@ -117,12 +165,26 @@ public class TCGGame extends ServerGame {
 		client.sendToClient(new AvailableTargetsMessage(message.getId(), message.getAction(), targetIds, targetAction.getMin(), targetAction.getMax()));
 	}
 	
+	/**
+	 * Look for a specific action on a specific entity
+	 * 
+	 * @param entityId Target entity to search for actions
+	 * @param actionId Action to look for on the entity
+	 * @return The ECSAction object
+	 */
 	public ECSAction findAction(int entityId, String actionId) {
 		Entity entity = Objects.requireNonNull(game.getEntity(entityId), "Entity " + entityId + " not found");
 		ECSAction action = Actions.getAction(entity, actionId);
 		return Objects.requireNonNull(action, "Action " + actionId + " not found on entity " + entityId);
 	}
 	
+	/**
+	 * Checks the game state, client, and action for validity.
+	 * If valid, finds the action of the message, finds the available targets, and sends them to the client
+	 * 
+	 * @param message The UseAbilityMessage object
+	 * @param client The client object who sent the move
+	 */
 	public void handleMove(UseAbilityMessage message, ClientIO client) {
 		if (this.isGameOver()) {
 			logger.info("Ignoring move because game has ended: " + message + " from " + client);
@@ -149,16 +211,11 @@ public class TCGGame extends ServerGame {
 		sendAvailableActions();
 	}
 	
-	@Override
-	protected boolean makeMove(Command command, int player) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	protected void updateStatus() {
-		
-	}
-
+	/**
+	 * 
+	 * @param io The target client
+	 * @return The index of the client in this object
+	 */
 	public Entity playerFor(ClientIO io) {
 		int index = this.getPlayers().indexOf(io);
 		if (index < 0) {
@@ -167,6 +224,11 @@ public class TCGGame extends ServerGame {
 		return getPlayer(index);
 	}
 	
+	/**
+	 * 
+	 * @param index The index to search for
+	 * @return The player at that index
+	 */
 	private Entity getPlayer(int index) {
 		List<Entity> players = game.findEntities(entity -> entity.hasComponent(PlayerComponent.class) && entity.getComponent(PlayerComponent.class).getIndex() == index);
 		if (players.size() != 1) {
@@ -175,6 +237,9 @@ public class TCGGame extends ServerGame {
 		return players.get(0);
 	}
 	
+	/**
+	 * Initializes configurations, starts the ECSGame, and sets up the AI
+	 */
 	@Override
 	protected void onStart() {
 		mod.declareConfiguration(game);
@@ -188,6 +253,11 @@ public class TCGGame extends ServerGame {
 		this.setupAIPlayers();
 	}
 	
+	/**
+	 * Sets up the game based on the mod.
+	 * Events are registered to the game which handle a class and call a method.
+	 * Sends the initial available actions for the game.
+	 */
 	private void startECSGame() {
 		mod.setupGame(game);
 		
@@ -195,7 +265,7 @@ public class TCGGame extends ServerGame {
 		game.getEvents().registerHandlerAfter(this, ZoneChangeEvent.class, this::zoneChange);
 		game.getEvents().registerHandlerAfter(this, EntityRemoveEvent.class, this::remove);
 		game.getEvents().registerHandlerAfter(this, GameOverEvent.class, event -> this.endGame());
-		AISystem.setup(game, server.getScheduler());
+		AISystem.setup(game, aiExecutor.get());
 		game.addSystem(game -> game.getEvents().registerHandlerAfter(this, ActionPerformEvent.class, event -> this.sendAvailableActions()));
 		
 		game.startGame();
@@ -233,6 +303,12 @@ public class TCGGame extends ServerGame {
 		return sent;
 	}
 
+	/**
+	 * Takes the configuration of the client and modifies its DeckConfig to produce a random deck.
+	 * 
+	 * @param client Target client for the random deck
+	 * @param configMessage Original configuration of the client
+	 */
 	private void generateRandomDeck(ClientIO client, PlayerConfigMessage configMessage) {
 		Map<String, Object> configs = configMessage.getConfigs();
 		for (Entry<String, Object> entry : configs.entrySet()) {
@@ -246,6 +322,9 @@ public class TCGGame extends ServerGame {
 		this.incomingPlayerConfig(finalConfig, client);
 	}
 
+	/**
+	 * If a ClientIO in the game is an AI Client, the AI is initialized to its preset AI level
+	 */
 	private void setupAIPlayers() {
 		for (ClientIO io : this.getPlayers()) {
 			if (io instanceof FakeAIClientTCG) {
@@ -259,18 +338,26 @@ public class TCGGame extends ServerGame {
 		}
 	}
 
+	/**
+	 * Looks at all Clients, resets their actions, then gets all actions for each and sends them.
+	 */
 	private void sendAvailableActions() {
 		for (ClientIO io : this.getPlayers()) {
-			Entity player = playerFor(io);
 			io.sendToClient(new ResetAvailableActionsMessage());
 			if (game.isGameOver()) {
 				continue;
 			}
+			Entity player = playerFor(io);
 			getAllActions(game).filter(action -> action.isAllowed(player))
 				.forEach(action -> io.sendToClient(new UseableActionMessage(action.getOwner().getId(), action.getName(), !action.getTargetSets().isEmpty())));
 		}
 	}
 
+	/**
+	 * 
+	 * @param game The game to search for actions
+	 * @return A stream of action components for all entities in the game
+	 */
 	private static Stream<ECSAction> getAllActions(ECSGame game) {
 		return game.getEntitiesWithComponent(ActionComponent.class)
 			.stream()
@@ -278,6 +365,11 @@ public class TCGGame extends ServerGame {
 					.getECSActions().stream());
 	}
 	
+	/**
+	 * Sends the zone to all players. If the zone is known, also sends the cards.
+	 * 
+	 * @param zone The zone component to send
+	 */
 	private void sendZone(ZoneComponent zone) {
 		for (ClientIO io : this.getPlayers()) {
 			Entity player = playerFor(io);
@@ -288,25 +380,44 @@ public class TCGGame extends ServerGame {
 		}
 	}
 	
+	/**
+	 * Zones are treated differently when they are known to the target player.
+	 * 
+	 * @param zone The zone component object
+	 * @param player The target player for the message
+	 * @return A zone message constructed based on the zone component object properties.
+	 */
 	private ZoneMessage constructZoneMessage(ZoneComponent zone, Entity player) {
 		return new ZoneMessage(zone.getZoneId(), zone.getName(), 
 				zone.getOwner().getId(), zone.size(), zone.isKnownTo(player), zone.stream().mapToInt(e -> e.getId()).toArray());
 	}
 	
+	/**
+	 * A CardInfoMesage is created and sent to the target client.
+	 * 
+	 * @param io The target client
+	 * @param card The card entity to send
+	 */
 	private void sendCard(ClientIO io, Entity card) {
 		CardComponent cardData = card.getComponent(CardComponent.class);
 		io.sendToClient(new CardInfoMessage(cardData.getCurrentZone().getZoneId(), card.getId(), infoMap(card)));
 	}
 	
+	/**
+	 * 
+	 * @param entity The entity to map
+	 * @return A map of the target entity
+	 */
 	private Map<String, Object> infoMap(Entity entity) {
 		return EntitySerialization.serialize(entity);
 	}
 
-	@Override
-	public ECSGame getGameModel() {
-		return game;
-	}
-
+	/**  
+	 * If all player entities have submitted configs, start the game
+	 * 
+	 * @param message The PlayerConfigMessage object
+	 * @param client The client that sent the config
+	 */
 	public void incomingPlayerConfig(PlayerConfigMessage message, ClientIO client) {
 		Entity player = playerFor(client);
 		ConfigComponent config = player.getComponent(ConfigComponent.class);
@@ -320,6 +431,10 @@ public class TCGGame extends ServerGame {
 		}
 	}
 
+	/**
+	 * 
+	 * @return Returns true if any of the ConfigComponents are not configured
+	 */
 	private boolean isConfigNeeded() {
 		Set<Entity> configEntities = game.getEntitiesWithComponent(ConfigComponent.class);
 		return configEntities.stream().map(e -> e.getComponent(ConfigComponent.class)).anyMatch(config -> !config.isConfigured());
