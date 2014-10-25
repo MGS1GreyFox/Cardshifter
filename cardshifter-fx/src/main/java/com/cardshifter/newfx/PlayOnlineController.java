@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
@@ -38,7 +39,7 @@ public class PlayOnlineController extends BasicController implements Initializab
 	
 	@FXML
 	private void handleConnectButtonAction(final ActionEvent actionEvent) {
-		contentCallback.useNotificationPane(notificationPane -> notificationPane.show("This feature is not available yet."));
+		contentCallback.showDialog(new Label("This feature is not available yet."));
 	}
 	
 	@FXML

@@ -28,6 +28,7 @@ public final class ClientController extends ContentController implements Initial
 	
 	@Override
 	public void initialize(final URL url, final ResourceBundle resourceBundle) {
+		super.initialize(url, resourceBundle);
 		buildLabel.setText("Build: " + getClass().getPackage().getImplementationVersion());
 		setContent(Views.load(getClass().getResource("Homepage.fxml"), new HomepageController(stage, this)));
 	}
