@@ -109,13 +109,18 @@ public abstract class ContentController extends BasicController implements Initi
 		notificationActionConsumer.accept(notificationPane);
 	}
 	
-	//TODO add some form of callback that, when triggered, removes the pop-up node
 	@Override
 	public void showDialog(final Node node) {
 		Objects.requireNonNull(node, "node");
 		internalContentPane.setDisable(true);
 		internalDialogPane.setMouseTransparent(false);
 		internalDialogPane.setCenter(node);
-		//TODO un-disable once dialog is exited
+	}
+	
+	@Override
+	public void closeDialog() {
+		internalDialogPane.setCenter(null);
+		internalDialogPane.setMouseTransparent(true);
+		internalContentPane.setDisable(false);
 	}
 }

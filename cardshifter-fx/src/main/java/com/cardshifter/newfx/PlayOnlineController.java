@@ -39,7 +39,9 @@ public class PlayOnlineController extends BasicController implements Initializab
 	
 	@FXML
 	private void handleConnectButtonAction(final ActionEvent actionEvent) {
-		contentCallback.showDialog(new Label("This feature is not available yet."));
+		Label label = new Label("This feature is not available yet.");
+		label.setOnMouseClicked(mouseEvent -> contentCallback.closeDialog());
+		contentCallback.showDialog(label);
 	}
 	
 	@FXML

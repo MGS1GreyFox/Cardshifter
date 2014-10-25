@@ -24,4 +24,6 @@ public interface ContentCallback {
 	void useNotificationPane(final Consumer<NotificationPane> notificationActionConsumer);
 	
 	void showDialog(final Node node);
+	
+	void closeDialog();
 }
