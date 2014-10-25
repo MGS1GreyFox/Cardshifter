@@ -40,7 +40,7 @@ public final class HomepageController extends BasicController implements Initial
 	
 	@FXML
 	private void handlePlayLocalButtonAction(final ActionEvent actionEvent) {
-		
+		contentCallback.useNotificationPane(notificationPane -> notificationPane.show("This feature is not available yet."));
 	}
 	
 	@FXML

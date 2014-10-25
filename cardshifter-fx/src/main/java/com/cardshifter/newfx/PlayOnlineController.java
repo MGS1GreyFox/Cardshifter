@@ -38,7 +38,7 @@ public class PlayOnlineController extends BasicController implements Initializab
 	
 	@FXML
 	private void handleConnectButtonAction(final ActionEvent actionEvent) {
-		
+		contentCallback.useNotificationPane(notificationPane -> notificationPane.show("This feature is not available yet."));
 	}
 	
 	@FXML
