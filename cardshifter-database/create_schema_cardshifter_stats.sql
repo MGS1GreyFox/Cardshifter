@@ -102,9 +102,9 @@ CREATE TABLE game_actions
 		FOREIGN KEY (action_card) REFERENCES card(id),
 	action_attack INT NULL,
 	target_player INT NULL,
-		FOREIGN KEY (action_player) REFERENCES player(id),
+		FOREIGN KEY (target_player) REFERENCES player(id),
 	target_card INT NULL,
-		FOREIGN KEY (action_player) REFERENCES player(id),
+		FOREIGN KEY (target_card) REFERENCES card(id),
 	action_time TIMESTAMP NOT NULL
 );
 
