@@ -16,16 +16,19 @@ CREATE TABLE player
 	delete_date TIMESTAMP NULL DEFAULT NULL,
 	last_seen_date TIMESTAMP NULL DEFAULT NULL
 );
+CREATE UNIQUE INDEX player_name_idx ON player(name);
 CREATE TABLE mod 
 (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
+	version INT NOT NULL, -- incremented when modified
 	description TEXT NULL,
 	owner_player_id INT NOT NULL,
 		FOREIGN KEY (owner_player_id) REFERENCES player(id),
 	create_date TIMESTAMP NOT NULL DEFAULT NOW(),
 	delete_date TIMESTAMP NULL DEFAULT NULL
 );
+CREATE UNIQUE INDEX mod_name_idx ON mod(name);
 CREATE TABLE player_mod 
 (
 	player_id INT NOT NULL,
@@ -44,7 +47,7 @@ INSERT INTO card_type (name) VALUES
 CREATE TABLE card 
 (
 	id SERIAL PRIMARY KEY,
-	version INT NOT NULL,
+	version INT NOT NULL, -- incremented when modified
 	name TEXT NULL,
 	description TEXT NULL,
 	effect_description TEXT NULL,
@@ -60,6 +63,7 @@ CREATE TABLE card
 	create_date TIMESTAMP NOT NULL DEFAULT NOW(),
 	delete_date TIMESTAMP NULL DEFAULT NULL
 );
+CREATE INDEX card_name_idx ON card(name);
 CREATE TABLE deck
 (
 	id SERIAL PRIMARY KEY,
@@ -72,7 +76,7 @@ CREATE TABLE deck_card
 (
 	deck_id INT,
 		FOREIGN KEY (deck_id) REFERENCES deck(id),
-	deck_version INT NOT NULL,
+	version INT NOT NULL, -- incremented when modified
 	card_id INT NOT NULL,
 		FOREIGN KEY (card_id) REFERENCES card(id),
 	card_quantity INT NOT NULL
