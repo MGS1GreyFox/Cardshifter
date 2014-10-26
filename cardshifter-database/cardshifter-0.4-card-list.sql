@@ -1,5 +1,5 @@
 ﻿-- SQL card table insert query
-SET SEARCH_PATH TO cardshifter_stats; DELETE FROM card;
+START TRANSACTION; SET SEARCH_PATH TO cardshifter_stats; DELETE FROM card;
 INSERT INTO card (id,version,name,description,effect_description,type,attack,health,mana_cost,scrap_cost,scrap_value,sickness,attack_available) VALUES
 (1,1,null,null,null,'B0T',0,1,0,null,3,1,1),
 (2,1,null,null,null,'B0T',1,1,1,null,1,1,1),
@@ -28,3 +28,4 @@ INSERT INTO card (id,version,name,description,effect_description,type,attack,hea
 (25,1,null,null,null,null,0,3,null,2,null,null,null),
 (26,1,null,null,null,null,2,2,null,3,null,null,null),
 (27,1,null,null,null,null,3,3,null,5,null,null,null);
+COMMIT;
