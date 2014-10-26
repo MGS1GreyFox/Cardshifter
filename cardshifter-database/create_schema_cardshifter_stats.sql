@@ -1,4 +1,5 @@
 ﻿START TRANSACTION;
+
 DROP SCHEMA IF EXISTS cardshifter_stats CASCADE;
 CREATE SCHEMA cardshifter_stats;
 SET SEARCH_PATH TO cardshifter_stats;
@@ -11,9 +12,9 @@ CREATE TABLE player
 	email TEXT,
 	website TEXT NULL,
 	about TEXT NULL,
-	create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-	delete_date TIMESTAMP WITHOUT TIME ZONE NULL DEFAULT NULL,
-	last_seen_date TIMESTAMP NULL
+	create_date TIMESTAMP NOT NULL DEFAULT NOW(),
+	delete_date TIMESTAMP NULL DEFAULT NULL,
+	last_seen_date TIMESTAMP NULL DEFAULT NULL
 );
 CREATE TABLE mod 
 (
@@ -22,8 +23,8 @@ CREATE TABLE mod
 	description TEXT NULL,
 	owner_player_id INT NOT NULL,
 		FOREIGN KEY (owner_player_id) REFERENCES player(id),
-	create_date TIMESTAMP WITHOUT TIME ZONE NULL DEFAULT NOW(),
-	delete_date TIMESTAMP WITHOUT TIME ZONE NULL DEFAULT NULL
+	create_date TIMESTAMP NOT NULL DEFAULT NOW(),
+	delete_date TIMESTAMP NULL DEFAULT NULL
 );
 CREATE TABLE player_mod 
 (
@@ -32,6 +33,14 @@ CREATE TABLE player_mod
 	mod_id INT NOT NULL,
 		FOREIGN KEY (mod_id) REFERENCES mod(id)
 );
+CREATE TABLE card_type
+(
+	name TEXT PRIMARY KEY
+);
+INSERT INTO card_type (name) VALUES
+	('B0T'),
+	('Bio'),
+	('Enhancement');
 CREATE TABLE card 
 (
 	id SERIAL PRIMARY KEY,
@@ -40,6 +49,7 @@ CREATE TABLE card
 	description TEXT NULL,
 	effect_description TEXT NULL,
 	type TEXT NULL,
+		FOREIGN KEY (type) REFERENCES card_type(name),
 	attack INT NULL,
 	health INT NULL,
 	mana_cost INT NULL,
@@ -47,20 +57,51 @@ CREATE TABLE card
 	scrap_value INT NULL,
 	sickness INT NULL,
 	attack_available INT NULL,
-	create_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-	delete_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL
+	create_date TIMESTAMP NOT NULL DEFAULT NOW(),
+	delete_date TIMESTAMP NULL DEFAULT NULL
 );
 CREATE TABLE deck
 (
-	id SERIAL,
-	version INT NOT NULL,
+	id SERIAL PRIMARY KEY,
 	player_id INT NOT NULL,
 		FOREIGN KEY (player_id) REFERENCES player(id),
 	mod_id INT NOT NULL,
-		FOREIGN KEY (mod_id) REFERENCES mod(id),
+		FOREIGN KEY (mod_id) REFERENCES mod(id)
+);
+CREATE TABLE deck_card
+(
+	deck_id INT,
+		FOREIGN KEY (deck_id) REFERENCES deck(id),
+	deck_version INT NOT NULL,
 	card_id INT NOT NULL,
 		FOREIGN KEY (card_id) REFERENCES card(id),
 	card_quantity INT NOT NULL
+);
+CREATE TABLE game_master
+(
+	game_id SERIAL PRIMARY KEY,
+	player1 INT,
+		FOREIGN KEY (player1) REFERENCES player(id),
+	player2 INT,
+		FOREIGN KEY (player2) REFERENCES player(id),
+	start_time TIMESTAMP NOT NULL DEFAULT NOW(),
+	end_time TIMESTAMP NULL DEFAULT NULL
+);
+CREATE TABLE game_actions
+(
+	game_id INT NOT NULL,
+		FOREIGN KEY (game_id) REFERENCES game_master(game_id),
+	turn INT NOT NULL,
+	action_player INT NOT NULL,
+		FOREIGN KEY (action_player) REFERENCES player(id),
+	action_card INT NULL,
+		FOREIGN KEY (action_card) REFERENCES card(id),
+	action_attack INT NULL,
+	target_player INT NULL,
+		FOREIGN KEY (action_player) REFERENCES player(id),
+	target_card INT NULL,
+		FOREIGN KEY (action_player) REFERENCES player(id),
+	action_time TIMESTAMP NOT NULL
 );
 
 COMMIT;
