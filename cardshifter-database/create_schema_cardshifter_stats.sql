@@ -36,16 +36,6 @@ CREATE TABLE player_mod
 	mod_id INT NOT NULL,
 		FOREIGN KEY (mod_id) REFERENCES mod(id)
 );
-CREATE TABLE card_type
-(
-	name TEXT PRIMARY KEY UNIQUE
-);
-INSERT INTO card_type (name) VALUES
-	('Mech'),
-	('Hume'),
-	('Bio'),
-	('Upgrade'),
-	('Spell');
 CREATE TABLE card 
 (
 	id SERIAL PRIMARY KEY UNIQUE,
@@ -54,12 +44,12 @@ CREATE TABLE card
 	flavor_text TEXT NULL,
 	effect_description TEXT NULL,
 	type TEXT NULL,
-		FOREIGN KEY (type) REFERENCES card_type(name),
+--		FOREIGN KEY (type) REFERENCES card_type(name),
 	attack INT NULL,
 	health INT NULL,
-	mana_cost INT NULL,
-	scrap_cost INT NULL,
-	scrap_value INT NULL,
+--	mana_cost INT NULL,
+--	scrap_cost INT NULL,
+--	scrap_value INT NULL,
 	sickness INT NULL,
 	attack_available INT NULL,
 	create_time TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -101,6 +91,7 @@ CREATE TABLE game_player
 		FOREIGN KEY (player_deck) REFERENCES deck(id),
 	game_rank INT NOT NULL
 );
+
 COMMIT;
 
 SELECT
