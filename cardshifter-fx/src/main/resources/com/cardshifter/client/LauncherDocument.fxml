@@ -12,7 +12,7 @@
    <children>
       <AnchorPane layoutX="182.0" layoutY="25.0" prefHeight="102.0" prefWidth="200.0">
          <children>
-            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#09dd2d" height="123.0" layoutX="-3.0" layoutY="-2.0" stroke="BLACK" strokeType="INSIDE" width="258.0" />
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#db0b0b" height="123.0" layoutX="-3.0" layoutY="-2.0" stroke="BLACK" strokeType="INSIDE" width="258.0" />
             <Label layoutX="19.0" layoutY="14.0" prefHeight="45.0" prefWidth="239.0" text="Cardshifter" textAlignment="CENTER">
                <font>
                   <Font name="System Bold" size="37.0" />
