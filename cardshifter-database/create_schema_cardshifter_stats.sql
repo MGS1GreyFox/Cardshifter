@@ -1,4 +1,8 @@
-﻿START TRANSACTION;
+﻿SET SEARCH_PATH TO cardshifter_stats;
+CREATE OR REPLACE FUNCTION cardshifter_create_schema()
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$ BEGIN
 
 DROP SCHEMA IF EXISTS cardshifter_stats CASCADE;
 CREATE SCHEMA cardshifter_stats;
@@ -88,8 +92,8 @@ CREATE TABLE game_player
 	game_rank INT NOT NULL
 );
 
-COMMIT;
-
+END; $$
+/*
 SELECT
 	tables.table_schema,
 	tables.table_name,
@@ -105,3 +109,4 @@ WHERE
 ORDER BY 
 	tables.table_name ASC,
 	columns.ordinal_position ASC;
+*/
