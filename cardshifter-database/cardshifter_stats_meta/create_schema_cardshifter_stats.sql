@@ -1,4 +1,7 @@
-﻿SET SEARCH_PATH TO cardshifter_stats;
+﻿DROP SCHEMA IF EXISTS cardshifter_stats_meta CASCADE;
+CREATE SCHEMA cardshifter_stats_meta;
+SET SEARCH_PATH TO cardshifter_stats_meta;
+
 CREATE OR REPLACE FUNCTION cardshifter_create_schema()
 RETURNS VOID
 LANGUAGE plpgsql
